@@ -32,6 +32,7 @@ class Config:
         self.api_url: str = self.build_api_url()  # Build the full URL
         self.request_headers: Dict[str, str] = self._get_headers("Headers")
         self.inventory_request_headers: Dict[str, str] = self._get_inventory_headers() # Fix 2: Add inventory headers
+        self.test_email_subject: str = self.config.get("Email", "test_email_subject")
         self.product_email_subject: str = self.config.get("Email", "product_email_subject")
         self.down_email_subject: str = self.config.get("Email", "down_email_subject")
         self.email_user: str = self.config.get("Email", "email_user")
@@ -271,7 +272,11 @@ def process_api_response(api_response: Any) -> None:
             # Filter by manufacturer and GPU
             if manufacturer == config.manufacturer and gpu in config.gpus_to_monitor:
                 if product_sku != config.last_known_skus.get(gpu, ""):
-                    if config.last_known_skus.get(gpu, "") != "":
+                    if config.last_known_skus.get(gpu, "") == "":
+                        logger.info(f"Sending test email {gpu}: {product_sku}")
+                        body: str = f"<p>SKU set for {gpu} to: {product_sku}</p>"
+                        send_email(config.test_email_subject, body)
+                    elif config.last_known_skus.get(gpu, "") != "":
                         logger.info(f"New SKU detected for {gpu}: {product_sku}")
                         # Email for SKU Change
                         body: str = f"<p>SKU changed for {gpu} to: {product_sku}</p>"
