@@ -5,9 +5,10 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
 ## Features
 
 -   **Automated Stock Checking:** Monitors the NVIDIA Partners API for RTX 50 series (and other configured GPUs) availability.
--   **Email Notifications:** Sends email alerts when a matching product is in stock or if the API is down.
+-   **Email Notifications:** Sends email alerts when a matching product is in stock or if the API is down. **SKU change detection emails are sent only after the first successful run.**
 -   **Configurable:** Allows customization of email settings, API URL, monitored GPUs, manufacturer, check interval, and maximum API failure count via a `config.ini` file.
 -   **Robust URL Handling:** The base API URL and headers are configured in `config.ini`, with automatic handling of the locale.
+-   **Specific Inventory API Headers:** Uses specific headers for the inventory API to avoid being blocked.
 -   **Logging:** Logs events and errors to `apimonitor.log` for debugging and monitoring, including detailed API responses and status codes.
 - **Multiple GPU Support**: Monitors multiple GPUs
 
@@ -50,7 +51,7 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
     ```bash
     pip install -r requirements.txt
     ```
-    (The `requirements.txt` file should contain: `requests`, `python-dotenv`, and `configparser`)
+    (The `requirements.txt` file should contain: `requests`, `configparser`)
 
 ## Configuration
 
@@ -71,6 +72,7 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
     ```ini
     [API]
     base_api_url = https://api.nvidia.partners/edge/product/search?page=1&limit=12&locale={locale}&gpu=RTX%205090,RTX%205080&gpu_filter=RTX%205090~2,RTX%205080
+    inventory_api_url = https://api.store.nvidia.com/partner/v1/feinventory?status=1&skus={sku}&locale={locale}
     locale = sv-se
 
     [Headers]
@@ -108,13 +110,14 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
 
     -   **`[API]`**:
         -   `base_api_url`:  The base URL for the NVIDIA Partners API.  **Do not modify the placeholder `{locale}`**.  These are automatically filled in by the script.
+        -   `inventory_api_url`: The base URL for the NVIDIA Inventory API. **Do not modify the placeholders `{sku}` and `{locale}`**.
         -   `locale`: The locale code for the NVIDIA marketplace you want to monitor (e.g., `fr-fr`, `sv-se`, `en-us`, `en-gb`, etc.).  See the NVIDIA marketplace website for available locales.
 
     -   **`[Headers]`**:
-        -   These are the HTTP headers sent with the API request.  You generally shouldn't need to modify these unless the API's requirements change.  They are important for mimicking a legitimate browser request.
+        -   These are the HTTP headers sent with the Product Search API request.  You generally shouldn't need to modify these unless the API's requirements change.  They are important for mimicking a legitimate browser request.
 
     -   **`[Email]`**:
-        -   `product_email_subject`: The subject line for emails when a product is found in stock.
+        -   `product_email_subject`: The subject line for emails when a product is found in stock or when a SKU changes.
         -   `down_email_subject`: The subject line for emails when the API is down.
         -   `email_user`: Your Gmail address.
         -   `email_password`: The 16-character app password you generated.
@@ -138,20 +141,15 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
 
 ## Troubleshooting
 
--   **Email Issues:** Ensure that your Gmail address and app password are correct in `config.ini`. Also, check your spam folder if you are not receiving notifications.  Make sure you have enabled "Less secure app access" in your Google Account settings *if* you are not using an app password (but using an app password is strongly recommended).
--   **API Errors:**  The script logs detailed error messages to `apimonitor.log`.  Check this file for any issues related to API calls (e.g., timeouts, invalid responses).
+-   **Email Issues:** Ensure that your Gmail address and app password are correct in `config.ini`. Also, check your spam folder if you are not receiving notifications.
+-   **API Errors:**  The script logs detailed error messages to `apimonitor.log`.  Check this file for any issues related to API calls (e.g., timeouts, invalid responses, 403 Forbidden errors).
+-   **Inventory API 403 Forbidden Error:** This error is usually resolved by using the specific Inventory API headers already configured in the script. If you still encounter this error, ensure your `config.ini` `[Headers]` section is correctly configured and that your network is not blocking the API requests.
 -   **Incorrect Filtering:**  If you're not getting notifications for products you expect, double-check the `GPU` and `manufacturer` values in `config.ini`.  Make sure they match the values returned by the API *exactly* (including case).  The debug logs will show you the exact values being checked.
-- **Requirements:** Ensure all required libraries are installed.
+- **Requirements:** Ensure all required libraries are installed (`requests`, `configparser`).
 
 ## Testing the Email Functionality
 
-To test the email functionality without waiting for a product to come into stock, you can temporarily modify the `config.ini` file to trigger an email:
-
-1.  **API Down Simulation:**  To test the "API Down" email, change the `base_api_url` in the `[API]` section to an invalid URL (e.g., add an extra character).  Run the script; it should send an "API Down" email after the number of failures specified by `max_failures`.  **Remember to change the URL back to the correct value after testing.**
-
-2.  **Product in Stock Simulation:** This is trickier, as we can't directly control the API response.  You could:
-    *   **Temporarily modify the script:**  In the `process_api_response` function, *temporarily* comment out the `if` condition that checks for `manufacturer`, `gpu`, and `product_available`.  This will cause the script to treat *any* product returned by the API as a match, and it will send an email.  **Remember to uncomment the condition after testing.**  This is the most reliable way to test the "Product in Stock" email.
-    *   **Monitor a product that is likely to be in stock:** If you know of a product that is frequently in stock, you could temporarily add its GPU name to the `GPU` list in `config.ini`.
+To test the email functionality, refer to the "Testing the Email Functionality" section in the previous steps, making sure to adjust the testing methods if necessary based on the current script version.
 
 ## Disclaimer
 
