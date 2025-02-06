@@ -146,10 +146,31 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
 -   **Inventory API 403 Forbidden Error:** This error is usually resolved by using the specific Inventory API headers already configured in the script. If you still encounter this error, ensure your `config.ini` `[Headers]` section is correctly configured and that your network is not blocking the API requests.
 -   **Incorrect Filtering:**  If you're not getting notifications for products you expect, double-check the `GPU` and `manufacturer` values in `config.ini`.  Make sure they match the values returned by the API *exactly* (including case).  The debug logs will show you the exact values being checked.
 - **Requirements:** Ensure all required libraries are installed (`requests`, `configparser`).
-
 ## Testing the Email Functionality
 
-To test the email functionality, refer to the "Testing the Email Functionality" section in the previous steps, making sure to adjust the testing methods if necessary based on the current script version.
+To ensure the email notifications are working correctly, you can test both the "API Down" and "Product in Stock" email alerts:
+
+**1. Testing the "API Down" Email:**
+
+   - **Temporarily make the API URL invalid:**
+     1.  Open the `config.ini` file.
+     2.  In the `[API]` section, modify the `base_api_url` by adding an extra character or changing it slightly.  For example, you could add an "x" to the end of the URL, making it invalid.
+     3.  Run the script: `python gpu_checker_api.py`.
+     4.  The script will attempt to call the API, fail, and increment an internal failure counter.
+     5.  After the number of consecutive failures specified by `max_failures` (in `config.ini`), the "API Down" email should be sent to the `email_recipient` address.
+     6.  **Important:** After testing, remember to revert the `base_api_url` to its original, correct value.
+
+**2. Testing the "Product in Stock" Email:**
+
+   There are two ways to test this functionality:
+
+   - **Monitor a product that is often in stock:**
+     1.  Research a GPU that is frequently in stock on the NVIDIA store for your configured locale.
+     2.  Open the `config.ini` file.
+     3.  In the `[General]` section, add the GPU's name to the `GPU` list.
+     4.  Run the script: `python gpu_checker_api.py`.
+     5.  If the chosen GPU is actually in stock during the API check, and the inventory API call is successful, the "Product in Stock" email will be sent.
+     6.  **Important:** After testing, remember to remove the temporarily added GPU from the `GPU` list in `config.ini`.
 
 ## Disclaimer
 
