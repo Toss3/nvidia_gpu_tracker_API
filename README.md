@@ -60,8 +60,7 @@ This project is a Python script that monitors the availability of NVIDIA GeForce
     -   Go to your Google Account settings.
     -   Navigate to "Security" and then "2-Step Verification."  Make sure 2-Step Verification is enabled.
     -   At the bottom of the page, select "App passwords."
-    -   Choose "Mail" as the app and "Other (Custom name)" as the device.
-    -   Give it a name (e.g., "RTX 5090 Tracker") and click "Generate."
+    -   Give the App a name (e.g., "RTX 5090 Tracker") and click "Generate."
     -   Copy the generated 16-character app password.  **You won't see this password again, so store it securely.**
 
 2.  **Configure `config.ini`:**
